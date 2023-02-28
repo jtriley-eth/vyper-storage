@@ -5,7 +5,4 @@ pragma solidity ^0.8.18;
 import {toString} from "./String.sol";
 
 // Vyper Storage Layout Handler
-import {Variable, VyperStorage} from "src/VyperStorage.sol";
-
-// Vyper Storage Builder
-import {VyperStorageBuilder, newVyperStorageBuilder} from "src/VyperStorageBuilder.sol";
+import {newVyperStorage, VyperStorage, Variable} from "src/VyperStorage.sol";

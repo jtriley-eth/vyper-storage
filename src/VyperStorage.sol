@@ -8,6 +8,11 @@ using { toString } for uint256;
 
 Vm constant vm = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
+uint256 constant DEFAULT_MAX_LENGTH = 10;
+
+// Error: Variable Name and Slot Length Greater than Max Length
+error ArrayOverflow();
+
 // Variable Declaration
 struct Variable {
     string name;
@@ -20,6 +25,53 @@ struct VyperStorage {
     string vyperPath;
     string filePath;
     Variable[] variables;
+    uint256 variablesLength;
+}
+
+// Create new Vyper Storage
+function newVyperStorage() pure returns (VyperStorage memory) {
+    return VyperStorage({
+        vyperPath: "vyper",
+        filePath: "",
+        variables: new Variable[](DEFAULT_MAX_LENGTH),
+        variablesLength: 0
+    });
+}
+
+// Set Max Length
+function setMaxLength(VyperStorage memory vyperStorage, uint32 length) pure returns (VyperStorage memory) {
+    vyperStorage.variables = new Variable[](length);
+    return vyperStorage;
+}
+
+// Set Vyper Path
+function setVyperPath(VyperStorage memory vyperStorage, string memory path) pure returns (VyperStorage memory) {
+    vyperStorage.vyperPath = path;
+    return vyperStorage;
+}
+
+// Set File Path
+function setFilePath(VyperStorage memory vyperStorage, string memory path) pure returns (VyperStorage memory) {
+    vyperStorage.filePath = path;
+    return vyperStorage;
+}
+
+// Assign Variable Name and Slot
+function assignSlot(
+    VyperStorage memory vyperStorage,
+    string memory variableName,
+    string memory typ,
+    bytes32 slot
+) pure returns (VyperStorage memory) {
+    uint256 len = vyperStorage.variablesLength;
+    if (len >= vyperStorage.variables.length) revert ArrayOverflow();
+    vyperStorage.variables[len] = Variable({
+        name: variableName,
+        typ: typ,
+        slot: slot
+    });
+    vyperStorage.variablesLength += 1;
+    return vyperStorage;
 }
 
 // Create Storage Layout and Compile
@@ -77,4 +129,12 @@ function toJson(VyperStorage memory vyperStorage) pure returns (string memory js
     return string.concat("{", json, "}");
 }
 
-using { compile, jsonPath, toJson } for VyperStorage global;
+using {
+    setMaxLength,
+    setVyperPath,
+    setFilePath,
+    assignSlot,
+    compile,
+    jsonPath,
+    toJson
+} for VyperStorage global;
