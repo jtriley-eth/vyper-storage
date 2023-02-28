@@ -92,7 +92,11 @@ function assignSlot(
 
 // Create Storage Layout and Compile
 function compile(VyperStorage memory vyperStorage) returns (bytes memory initCode) {
-    createStorage(vyperStorage);
+    string[] memory rmArgs = new string[](2);
+    rmArgs[0] = "touch";
+    rmArgs[1] = vyperStorage.jsonPath();
+    vm.ffi(rmArgs);
+    vm.writeFile(vyperStorage.jsonPath(), vyperStorage.toJson());
 
     string[] memory compileArgs = new string[](4);
     compileArgs[0] = vyperStorage.vyperPath;
@@ -102,16 +106,6 @@ function compile(VyperStorage memory vyperStorage) returns (bytes memory initCod
 
     initCode = vm.ffi(compileArgs);
     vm.removeFile(vyperStorage.jsonPath());
-}
-
-// Create Storage Layout
-function createStorage(VyperStorage memory vyperStorage) {
-    string[] memory rmArgs = new string[](2);
-    rmArgs[0] = "touch";
-    rmArgs[1] = vyperStorage.jsonPath();
-    vm.ffi(rmArgs);
-
-    vm.writeFile(vyperStorage.jsonPath(), vyperStorage.toJson());
 }
 
 // Create Vyper Storage JSON Path
