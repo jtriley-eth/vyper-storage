@@ -10,12 +10,11 @@ import "vyper-storage/Lib.sol";
 
 // -- snip --
 
-bytes32 adminSlot = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+bytes32 implSlot = bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1);
 
-bytes memory initCode = newVyperStorageBuilder()
+bytes memory initCode = newVyperStorage()
     .filePath("src/ERC1967Proxy")
     .assignSlot("implementation", "address", implSlot)
-    .build()
     .compile();
 ```
 
@@ -26,11 +25,6 @@ This is a library for Vyper storage slot overrides as specified in the
 
 Overriding storage slots allows for custom storage layouts and storage-dependent ERC stanadards,
 for example [ERC-1967](https://eips.ethereum.org/EIPS/eip-1967).
-
-We implement the rust-like
-[builder pattern](https://rust-unofficial.github.io/patterns/patterns/creational/builder.html) for
-creating the storage layout strucutre and we implement global functions for both the `VyperStorage`
-and `VyperStorageBuilder` strucutres for a more ergonomic API.
 
 ## Installation and Importing
 
@@ -51,46 +45,80 @@ import "vyper-storage/Lib.sol";
 
 ## API Documentation
 
-### `VyperStorageBuilder`
-
-The `VyperStorageBuilder` implements the following methods.
-
-```solidity
-// creates a new builder
-VyperStorageBuilder memory builder = newVyperStorageBuilder();
-
-// sets the max length of the number variables (default 10)
-builder.maxLength(maxLength);
-
-// sets the vyper compiler path (default "vyper")
-builder.vyperPath(vyperPath);
-
-// sets the file path (default "")
-builder.filePath(filePath);
-
-// assigns a new storage slot
-builder.assignStorageSlot(variableName, variableType, slot);
-
-// builds the `VyperStorage` struct
-VyperStorage memory vyperStorage = builder.build();
-```
-
 ### `VyperStorage`
 
-The `VyperStorage` implements the following methods.
+#### Declaration
+
+The `VyperStorage` struct is defined as follows.
+
+> NOTE: To get the current length of vyper storage slot overrides, `vyperStorage.variablesLength`
+> should be used rather than `vyperStorage.variables.length`, as the former tracks the current
+> length and the latter simply maintains a buffer for future storage overrides.
 
 ```solidity
-VyperStorage memory vyperStorage = newVyperStorageBuilder()
-    .filePath("MyContract.vy")
-    .assignStorageSlot("counter", "uint256", 0x45)
-    .build();
+// Variable Declaration
+struct Variable {
+    // Vyper Variable Name
+    string name;
+    // Vyper Variable Type
+    string typ;
+    // Storage Slot
+    bytes32 slot;
+}
 
-// compiles the contract (this is the only required method)
-bytes memory initCode = vyperStorage.compile();
+// Vyper Storage
+struct VyperStorage {
+    // Vyper Compiler Path
+    string vyperPath;
+    // File Path to Compile
+    string filePath;
+    // Variable Storage Overrides
+    Variable[] variables;
+    // Current Length of Storage Overrides
+    uint256 variablesLength;
+}
+```
 
-// shows the json path
-string memory path = vyperStorage.jsonPath();
+#### Methods
 
-// converts the VyperStorage to json string
-string memory json = vyperStorage.toJson();
+The `VyperStorage` implements the following methods. Those that manipulate the state of the struct
+also return the updated struct, so methods may be chained together.
+
+```solidity
+// Create new Vyper Storage
+function newVyperStorage() pure returns (VyperStorage memory);
+
+// Set Max Length (default is 10)
+function setMaxLength(
+    VyperStorage memory vyperStorage,
+    uint32 length
+) pure returns (VyperStorage memory);
+
+// Set Vyper Path (default is "vyper")
+function setVyperPath(
+    VyperStorage memory vyperStorage,
+    string memory path
+) pure returns (VyperStorage memory);
+
+// Set File Path (default is "")
+function setFilePath(
+    VyperStorage memory vyperStorage,
+    string memory path
+) pure returns (VyperStorage memory);
+
+// Assign Variable Name and Slot
+function assignSlot(
+    VyperStorage memory vyperStorage,
+    string memory variableName,
+    string memory typ,
+    bytes32 slot
+) pure returns (VyperStorage memory);
+
+// Create Storage Layout and Compile
+//
+// Note: creates, writes, and deletes a temp file named `./.temp_vyper_storage.json`
+function compile(VyperStorage memory vyperStorage) returns (bytes memory initCode);
+
+// Convert Vyper Storage to JSON
+function toJson(VyperStorage memory vyperStorage) pure returns (string memory json);
 ```
