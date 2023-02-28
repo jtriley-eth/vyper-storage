@@ -110,7 +110,7 @@ function compile(VyperStorage memory vyperStorage) returns (bytes memory initCod
 
 // Create Vyper Storage JSON Path
 function jsonPath(VyperStorage memory) pure returns (string memory path) {
-    return string.concat(".temp_vyper_storage.json");
+    return ".temp_vyper_storage.json";
 }
 
 // Convert Vyper Storage to JSON
