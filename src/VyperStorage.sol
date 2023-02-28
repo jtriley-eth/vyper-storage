@@ -15,16 +15,23 @@ error ArrayOverflow();
 
 // Variable Declaration
 struct Variable {
+    // Vyper Variable Name
     string name;
+    // Vyper Variable Type
     string typ;
+    // Storage Slot
     bytes32 slot;
 }
 
 // Vyper Storage
 struct VyperStorage {
+    // Vyper Compiler Path
     string vyperPath;
+    // File Path to Compile
     string filePath;
+    // Variable Storage Overrides
     Variable[] variables;
+    // Current Length of Storage Overrides
     uint256 variablesLength;
 }
 
@@ -39,19 +46,28 @@ function newVyperStorage() pure returns (VyperStorage memory) {
 }
 
 // Set Max Length
-function setMaxLength(VyperStorage memory vyperStorage, uint32 length) pure returns (VyperStorage memory) {
+function setMaxLength(
+    VyperStorage memory vyperStorage,
+    uint32 length
+) pure returns (VyperStorage memory) {
     vyperStorage.variables = new Variable[](length);
     return vyperStorage;
 }
 
 // Set Vyper Path
-function setVyperPath(VyperStorage memory vyperStorage, string memory path) pure returns (VyperStorage memory) {
+function setVyperPath(
+    VyperStorage memory vyperStorage,
+    string memory path
+) pure returns (VyperStorage memory) {
     vyperStorage.vyperPath = path;
     return vyperStorage;
 }
 
 // Set File Path
-function setFilePath(VyperStorage memory vyperStorage, string memory path) pure returns (VyperStorage memory) {
+function setFilePath(
+    VyperStorage memory vyperStorage,
+    string memory path
+) pure returns (VyperStorage memory) {
     vyperStorage.filePath = path;
     return vyperStorage;
 }
